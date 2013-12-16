@@ -8,18 +8,21 @@ import sublime, sublime_plugin, os
 
 class FileComplete(sublime_plugin.EventListener):
 
-    # def on_selection_modified_async(self,view):
-    #     if not view.window():
-    #         return
+    reopenCompletions = False
 
-    #     sel = view.sel()[0].a
-    #     completionPath = self.get_completion_path(view, sel)
-    #     if completionPath:
-    #         print(completionPath)
-    #         _files = [ _file for _file in os.listdir(completionPath) if not _file.startswith('.')]
-    #         if(len(_files) > 0):
-    #             view.run_command('auto_complete',
-    #                 {'disable_auto_insert': True, 'next_completion_if_showing': False})
+    def on_selection_modified_async(self,view):
+        if not view.window():
+            return
+
+        if self.reopenCompletions:
+            self.reopenCompletions = False
+            sel = view.sel()[0].a
+            completionPath = self.get_completion_path(view, sel)
+            if completionPath and os.path.isdir(completionPath):
+                _files = [ _file for _file in os.listdir(completionPath) if not _file.startswith('.')]
+                if(len(_files) > 0):
+                    view.run_command('auto_complete',
+                        {'disable_auto_insert': True, 'next_completion_if_showing': False})
 
     def get_completion_path(self,view,sel):
         scope_contents = view.substr(view.extract_scope(sel-1))
@@ -32,11 +35,14 @@ class FileComplete(sublime_plugin.EventListener):
 
         if not completionPath.startswith(('/', './', '../', '~/')):
             return False
-        return completionPath[:completionPath.rfind('/')+1] if '/' in completionPath else ''
+
+        return completionPath
+        # return completionPath[:completionPath.rfind('/')+1] if '/' in completionPath else ''
 
     def on_query_completions(self, view, prefix, locations):
         sel = view.sel()[0].a
         completionPath = self.get_completion_path(view, sel)
+        completionPath = completionPath[:completionPath.rfind('/')+1] if '/' in completionPath else ''
 
         if not completionPath or not view.file_name():
             return
@@ -55,6 +61,7 @@ class FileComplete(sublime_plugin.EventListener):
                     f += '/'
                 completions.append((f, f))
             if completions:
+                self.reopenCompletions = True
                 return completions
         except OSError:
             return
