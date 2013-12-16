@@ -1,10 +1,10 @@
 import sublime, sublime_plugin, os
 
-settings = {}
+# settings = {}
 
-def plugin_loaded():
-    global settings
-    settings = sublime.load_settings("FileComplete.sublime-settings")
+# def plugin_loaded():
+#     global settings
+#     settings = sublime.load_settings("FileComplete.sublime-settings")
 
 class FileComplete(sublime_plugin.EventListener):
 
